@@ -5,8 +5,8 @@
     <link rel="icon" type="image/svg+xml" href="/pianokeybord/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Keyboard Piano & Recorder</title>
-    <script type="module" crossorigin src="/pianokeybord/assets/index-D1oWJmWw.js"></script>
-    <link rel="stylesheet" crossorigin href="/pianokeybord/assets/index-Boirvblf.css">
+    <script type="module" crossorigin src="/pianokeybord/assets/index-C3vP9Lmd.js"></script>
+    <link rel="stylesheet" crossorigin href="/pianokeybord/assets/index-DWivlK-l.css">
   </head>
   <body>
     <div id="app">
@@ -27,6 +27,32 @@
         <div class="button-group export-group">
           <button id="btn-export-midi" class="btn secondary" disabled>Export MIDI</button>
           <button id="btn-export-wav" class="btn secondary" disabled>Export WAV</button>
+        </div>
+      </div>
+
+      <div class="feature-controls">
+        <div class="control-section">
+          <label for="sound-selector">�� Instrument</label>
+          <select id="sound-selector" class="selector">
+            <option value="synth">Synth</option>
+            <option value="piano">Piano</option>
+            <option value="8bit">8-bit</option>
+            <option value="organ">Organ</option>
+          </select>
+        </div>
+
+        <div class="control-section rhythm-section">
+          <label>🥁 Rhythm</label>
+          <div class="rhythm-controls">
+            <button id="btn-rhythm-toggle" class="btn secondary">Start Beat</button>
+            <select id="rhythm-selector" class="selector">
+              <option value="basic">Basic Rock</option>
+              <option value="jazz">Jazz</option>
+              <option value="electronic">Electronic</option>
+            </select>
+            <input type="range" id="tempo-slider" min="60" max="180" value="120" />
+            <span id="tempo-display">120 BPM</span>
+          </div>
         </div>
       </div>
 
