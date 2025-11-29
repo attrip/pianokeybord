@@ -53,28 +53,28 @@ const tempoSlider = document.getElementById('tempo-slider');
 const tempoDisplay = document.getElementById('tempo-display');
 
 // --- Instrument Creation Functions ---
-function createSynth() {
+function createSynthInstrument() {
   return new Tone.PolySynth(Tone.Synth, {
     oscillator: { type: 'triangle' },
     envelope: { attack: 0.02, decay: 0.1, sustain: 0.3, release: 1 }
   }).toDestination();
 }
 
-function createPiano() {
+function createPianoInstrument() {
   return new Tone.PolySynth(Tone.Synth, {
     oscillator: { type: 'sine' },
     envelope: { attack: 0.005, decay: 0.3, sustain: 0.1, release: 2 }
   }).toDestination();
 }
 
-function create8Bit() {
+function create8BitInstrument() {
   return new Tone.PolySynth(Tone.Synth, {
     oscillator: { type: 'square' },
     envelope: { attack: 0.001, decay: 0.1, sustain: 0.05, release: 0.1 }
   }).toDestination();
 }
 
-function createOrgan() {
+function createOrganInstrument() {
   return new Tone.PolySynth(Tone.Synth, {
     oscillator: { type: 'sine' },
     envelope: { attack: 0.01, decay: 0.2, sustain: 0.8, release: 0.5 }
@@ -84,7 +84,7 @@ function createOrgan() {
 // --- Initialization ---
 async function initAudio() {
   await Tone.start();
-  synth = createSynth();
+  synth = createSynthInstrument();
   
   // Setup Drum Synth for rhythm
   drumSynth = {
@@ -118,16 +118,16 @@ function changeInstrument(type) {
   
   switch(type) {
     case 'piano':
-      synth = createPiano();
+      synth = createPianoInstrument();
       break;
     case '8bit':
-      synth = create8Bit();
+      synth = create8BitInstrument();
       break;
     case 'organ':
-      synth = createOrgan();
+      synth = createOrganInstrument();
       break;
     default:
-      synth = createSynth();
+      synth = createSynthInstrument();
   }
   
   currentInstrument = type;
@@ -168,7 +168,7 @@ const rhythmPatterns = {
 };
 
 // --- UI Generation ---
-function createPiano() {
+function renderPianoKeys() {
   WHITE_KEYS.forEach((note, index) => {
     const key = document.createElement('div');
     key.className = 'key white';
@@ -208,10 +208,6 @@ function playNote(note) {
   
   const keyEl = document.querySelector(`.key[data-note="${note}"]`);
   if (keyEl) keyEl.classList.add('active');
-
-  if (recording) {
-    // Track for MIDI
-  }
 }
 
 function stopNote(note) {
@@ -357,4 +353,4 @@ btnExportWav.addEventListener('click', async () => {
 });
 
 // --- Start ---
-createPiano();
+renderPianoKeys();
