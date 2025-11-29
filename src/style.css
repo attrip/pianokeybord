@@ -17,14 +17,15 @@
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background-color: var(--bg-color);
   color: var(--text-color);
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  overflow: hidden;
+  overflow-x: hidden;
+  padding: 1rem;
 }
 
 #app {
@@ -50,6 +51,7 @@ h1 {
   background: linear-gradient(90deg, #fff, var(--accent-color));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 p {
@@ -63,8 +65,10 @@ p {
   background: #18181b;
   padding: 1rem 2rem;
   border-radius: 12px;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   border: 1px solid #333;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .status-display {
@@ -91,6 +95,7 @@ p {
 .button-group {
   display: flex;
   gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .btn {
@@ -137,6 +142,106 @@ p {
   background: var(--danger-color);
   color: white;
   box-shadow: 0 0 15px rgba(255, 77, 77, 0.4);
+}
+
+/* Feature Controls */
+.feature-controls {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.control-section {
+  background: #18181b;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  border: 1px solid #333;
+  flex: 1;
+  min-width: 200px;
+}
+
+.control-section label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--accent-color);
+}
+
+.selector {
+  background: #0d0d0f;
+  border: 1px solid #444;
+  color: var(--text-color);
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.selector:hover {
+  border-color: var(--accent-color);
+}
+
+.rhythm-section {
+  flex: 2;
+}
+
+.rhythm-controls {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.rhythm-controls .btn {
+  padding: 0.6rem 1.2rem;
+  font-size: 0.75rem;
+}
+
+.rhythm-controls .selector {
+  flex: 1;
+  min-width: 120px;
+}
+
+#tempo-slider {
+  flex: 1;
+  min-width: 100px;
+  height: 6px;
+  background: #333;
+  border-radius: 3px;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+#tempo-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--accent-color);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: var(--accent-glow);
+}
+
+#tempo-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: var(--accent-color);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: var(--accent-glow);
+}
+
+#tempo-display {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  color: var(--accent-color);
+  min-width: 70px;
+  text-align: center;
 }
 
 .piano-container {
@@ -194,9 +299,6 @@ p {
   background: var(--accent-color);
   box-shadow: 0 0 15px var(--accent-color);
 }
-
-/* Positioning black keys */
-/* This will be handled dynamically or with specific classes if fixed */
 
 .instructions {
   text-align: left;

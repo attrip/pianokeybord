@@ -21,6 +21,7 @@ const KEY_MAP = {
 
 // --- State ---
 let synth;
+let currentInstrument = 'synth';
 let recorder;
 let recording = false;
 let recordedChunks = [];
@@ -28,7 +29,14 @@ let startTime = 0;
 let timerInterval;
 let midiData = new Midi();
 let midiTrack;
-let activeNotes = new Map(); // key: note, value: startTime
+let activeNotes = new Map();
+
+// Rhythm Machine
+let rhythmPlaying = false;
+let rhythmLoop;
+let drumSynth;
+let currentTempo = 120;
+let currentRhythm = 'basic';
 
 // --- DOM Elements ---
 const pianoContainer = document.getElementById('piano');
@@ -38,14 +46,59 @@ const btnExportMidi = document.getElementById('btn-export-midi');
 const btnExportWav = document.getElementById('btn-export-wav');
 const statusText = document.getElementById('status-text');
 const timerDisplay = document.getElementById('timer');
+const soundSelector = document.getElementById('sound-selector');
+const rhythmToggle = document.getElementById('btn-rhythm-toggle');
+const rhythmSelector = document.getElementById('rhythm-selector');
+const tempoSlider = document.getElementById('tempo-slider');
+const tempoDisplay = document.getElementById('tempo-display');
+
+// --- Instrument Creation Functions ---
+function createSynth() {
+  return new Tone.PolySynth(Tone.Synth, {
+    oscillator: { type: 'triangle' },
+    envelope: { attack: 0.02, decay: 0.1, sustain: 0.3, release: 1 }
+  }).toDestination();
+}
+
+function createPiano() {
+  return new Tone.PolySynth(Tone.Synth, {
+    oscillator: { type: 'sine' },
+    envelope: { attack: 0.005, decay: 0.3, sustain: 0.1, release: 2 }
+  }).toDestination();
+}
+
+function create8Bit() {
+  return new Tone.PolySynth(Tone.Synth, {
+    oscillator: { type: 'square' },
+    envelope: { attack: 0.001, decay: 0.1, sustain: 0.05, release: 0.1 }
+  }).toDestination();
+}
+
+function createOrgan() {
+  return new Tone.PolySynth(Tone.Synth, {
+    oscillator: { type: 'sine' },
+    envelope: { attack: 0.01, decay: 0.2, sustain: 0.8, release: 0.5 }
+  }).toDestination();
+}
 
 // --- Initialization ---
 async function initAudio() {
   await Tone.start();
-  synth = new Tone.PolySynth(Tone.Synth, {
-    oscillator: { type: 'triangle' },
-    envelope: { attack: 0.02, decay: 0.1, sustain: 0.3, release: 1 }
-  }).toDestination();
+  synth = createSynth();
+  
+  // Setup Drum Synth for rhythm
+  drumSynth = {
+    kick: new Tone.MembraneSynth().toDestination(),
+    snare: new Tone.NoiseSynth({
+      noise: { type: 'white' },
+      envelope: { attack: 0.001, decay: 0.2, sustain: 0 }
+    }).toDestination(),
+    hihat: new Tone.MetalSynth({
+      frequency: 200,
+      envelope: { attack: 0.001, decay: 0.1, release: 0.01 },
+      resonance: 3000
+    }).toDestination()
+  };
   
   // Setup Recorder
   const dest = Tone.context.createMediaStreamDestination();
@@ -53,17 +106,69 @@ async function initAudio() {
   recorder = new MediaRecorder(dest.stream);
   
   recorder.ondataavailable = (e) => recordedChunks.push(e.data);
-  recorder.onstop = () => {
-    const blob = new Blob(recordedChunks, { type: 'audio/webm' });
-    // We will convert this blob or use AudioBuffer for WAV export later
-  };
   
   console.log('Audio initialized');
 }
 
+// --- Change Instrument ---
+function changeInstrument(type) {
+  if (synth) {
+    synth.dispose();
+  }
+  
+  switch(type) {
+    case 'piano':
+      synth = createPiano();
+      break;
+    case '8bit':
+      synth = create8Bit();
+      break;
+    case 'organ':
+      synth = createOrgan();
+      break;
+    default:
+      synth = createSynth();
+  }
+  
+  currentInstrument = type;
+  
+  // Reconnect to recorder
+  if (recorder) {
+    const dest = Tone.context.createMediaStreamDestination();
+    synth.connect(dest);
+    const newRecorder = new MediaRecorder(dest.stream);
+    newRecorder.ondataavailable = recorder.ondataavailable;
+    recorder = newRecorder;
+  }
+}
+
+// --- Rhythm Patterns ---
+const rhythmPatterns = {
+  basic: (time) => {
+    drumSynth.kick.triggerAttackRelease('C1', '8n', time);
+    drumSynth.hihat.triggerAttackRelease('8n', time);
+    drumSynth.hihat.triggerAttackRelease('8n', time + Tone.Time('8n').toSeconds());
+    drumSynth.snare.triggerAttackRelease('8n', time + Tone.Time('4n').toSeconds());
+    drumSynth.hihat.triggerAttackRelease('8n', time + Tone.Time('4n').toSeconds() + Tone.Time('8n').toSeconds());
+  },
+  jazz: (time) => {
+    drumSynth.hihat.triggerAttackRelease('16n', time);
+    drumSynth.kick.triggerAttackRelease('C1', '16n', time + Tone.Time('8n').toSeconds());
+    drumSynth.hihat.triggerAttackRelease('16n', time + Tone.Time('4n').toSeconds());
+    drumSynth.snare.triggerAttackRelease('16n', time + Tone.Time('4n').toSeconds() + Tone.Time('16n').toSeconds());
+  },
+  electronic: (time) => {
+    drumSynth.kick.triggerAttackRelease('C1', '16n', time);
+    drumSynth.kick.triggerAttackRelease('C1', '16n', time + Tone.Time('8n').toSeconds());
+    drumSynth.snare.triggerAttackRelease('16n', time + Tone.Time('4n').toSeconds());
+    drumSynth.hihat.triggerAttackRelease('32n', time);
+    drumSynth.hihat.triggerAttackRelease('32n', time + Tone.Time('16n').toSeconds());
+    drumSynth.hihat.triggerAttackRelease('32n', time + Tone.Time('8n').toSeconds());
+  }
+};
+
 // --- UI Generation ---
 function createPiano() {
-  // Create White Keys
   WHITE_KEYS.forEach((note, index) => {
     const key = document.createElement('div');
     key.className = 'key white';
@@ -74,17 +179,12 @@ function createPiano() {
     pianoContainer.appendChild(key);
   });
 
-  // Create Black Keys (Overlay)
   let whiteKeyIndex = 0;
   BLACK_KEYS.forEach((note) => {
     if (note) {
       const key = document.createElement('div');
       key.className = 'key black';
       key.dataset.note = note;
-      // Calculate position: (index * width) - (width / 2)
-      // Assuming white key width is approx 60px + margins
-      // A better way is to append to the container and use absolute positioning relative to white keys
-      // For simplicity in this vanilla setup, we'll calculate percent left
       const leftPercent = ((whiteKeyIndex + 1) * (100 / WHITE_KEYS.length)) - (100 / WHITE_KEYS.length / 2);
       key.style.left = `${leftPercent}%`;
       key.style.transform = 'translateX(-50%)';
@@ -106,13 +206,11 @@ function playNote(note) {
   synth.triggerAttack(note);
   activeNotes.set(note, Tone.now());
   
-  // Visual Feedback
   const keyEl = document.querySelector(`.key[data-note="${note}"]`);
   if (keyEl) keyEl.classList.add('active');
 
-  // MIDI Recording
   if (recording) {
-    // We'll add the note on release to get duration, or track start time here
+    // Track for MIDI
   }
 }
 
@@ -123,15 +221,13 @@ function stopNote(note) {
   const startTime = activeNotes.get(note);
   activeNotes.delete(note);
 
-  // Visual Feedback
   const keyEl = document.querySelector(`.key[data-note="${note}"]`);
   if (keyEl) keyEl.classList.remove('active');
 
-  // MIDI Recording
   if (recording && midiTrack) {
     midiTrack.addNote({
       midi: Tone.Frequency(note).toMidi(),
-      time: startTime - Tone.now() + (Tone.context.currentTime - startTime), // Approximate relative time
+      time: startTime - Tone.now() + (Tone.context.currentTime - startTime),
       duration: Tone.now() - startTime
     });
   }
@@ -149,6 +245,48 @@ window.addEventListener('keyup', (e) => {
   if (note) stopNote(note);
 });
 
+// --- Sound Selector ---
+soundSelector.addEventListener('change', (e) => {
+  changeInstrument(e.target.value);
+});
+
+// --- Rhythm Controls ---
+rhythmToggle.addEventListener('click', async () => {
+  if (!synth) await initAudio();
+  
+  if (!rhythmPlaying) {
+    Tone.Transport.bpm.value = currentTempo;
+    rhythmLoop = new Tone.Loop((time) => {
+      rhythmPatterns[currentRhythm](time);
+    }, '1m');
+    rhythmLoop.start(0);
+    Tone.Transport.start();
+    rhythmPlaying = true;
+    rhythmToggle.textContent = 'Stop Beat';
+    rhythmToggle.style.borderColor = 'var(--danger-color)';
+    rhythmToggle.style.color = 'var(--danger-color)';
+  } else {
+    Tone.Transport.stop();
+    if (rhythmLoop) rhythmLoop.dispose();
+    rhythmPlaying = false;
+    rhythmToggle.textContent = 'Start Beat';
+    rhythmToggle.style.borderColor = '';
+    rhythmToggle.style.color = '';
+  }
+});
+
+rhythmSelector.addEventListener('change', (e) => {
+  currentRhythm = e.target.value;
+});
+
+tempoSlider.addEventListener('input', (e) => {
+  currentTempo = parseInt(e.target.value);
+  tempoDisplay.textContent = `${currentTempo} BPM`;
+  if (rhythmPlaying) {
+    Tone.Transport.bpm.value = currentTempo;
+  }
+});
+
 // --- Recording Logic ---
 btnRecord.addEventListener('click', async () => {
   if (!synth) await initAudio();
@@ -161,7 +299,6 @@ btnRecord.addEventListener('click', async () => {
   recorder.start();
   startTime = Date.now();
   
-  // UI Updates
   statusText.innerText = "Recording...";
   statusText.style.color = "var(--danger-color)";
   btnRecord.disabled = true;
@@ -202,10 +339,6 @@ btnExportMidi.addEventListener('click', () => {
 });
 
 btnExportWav.addEventListener('click', async () => {
-  // To export WAV, we need to render the MIDI or use the recorded audio chunks.
-  // Since we recorded the audio stream directly, let's use that for high fidelity of what was heard.
-  // However, MediaRecorder gives WebM/Ogg usually. We need to decode it to AudioBuffer then to WAV.
-  
   if (recordedChunks.length === 0) return;
   
   const blob = new Blob(recordedChunks, { type: 'audio/webm' });
