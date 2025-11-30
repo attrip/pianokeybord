@@ -325,3 +325,30 @@ p {
 .key-map-guide strong {
   color: var(--accent-color);
 }
+
+/* Key labels */
+.key-label {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: #666;
+  user-select: none;
+  pointer-events: none;
+}
+
+.key.white .key-label {
+  color: #999;
+}
+
+.key.black .key-label {
+  color: #888;
+  bottom: 8px;
+  font-size: 0.65rem;
+}
+
+.key.active .key-label {
+  color: #000;
+}

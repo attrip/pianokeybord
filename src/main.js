@@ -19,6 +19,12 @@ const KEY_MAP = {
   ';': 'E5'
 };
 
+// Reverse mapping: note -> keyboard key
+const NOTE_TO_KEY = {};
+Object.entries(KEY_MAP).forEach(([key, note]) => {
+  NOTE_TO_KEY[note] = key.toUpperCase();
+});
+
 // --- State ---
 let synth;
 let currentInstrument = 'synth';
@@ -173,6 +179,13 @@ function renderPianoKeys() {
     const key = document.createElement('div');
     key.className = 'key white';
     key.dataset.note = note;
+    
+    // Add keyboard label
+    const label = document.createElement('span');
+    label.className = 'key-label';
+    label.textContent = NOTE_TO_KEY[note] || '';
+    key.appendChild(label);
+    
     key.addEventListener('mousedown', () => playNote(note));
     key.addEventListener('mouseup', () => stopNote(note));
     key.addEventListener('mouseleave', () => stopNote(note));
@@ -188,6 +201,12 @@ function renderPianoKeys() {
       const leftPercent = ((whiteKeyIndex + 1) * (100 / WHITE_KEYS.length)) - (100 / WHITE_KEYS.length / 2);
       key.style.left = `${leftPercent}%`;
       key.style.transform = 'translateX(-50%)';
+      
+      // Add keyboard label for black keys
+      const label = document.createElement('span');
+      label.className = 'key-label';
+      label.textContent = NOTE_TO_KEY[note] || '';
+      key.appendChild(label);
       
       key.addEventListener('mousedown', () => playNote(note));
       key.addEventListener('mouseup', () => stopNote(note));
