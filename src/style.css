@@ -25,7 +25,7 @@ body {
   align-items: center;
   min-height: 100vh;
   overflow-x: hidden;
-  padding: 1rem;
+  padding: 6rem 1rem;
 }
 
 #app {
